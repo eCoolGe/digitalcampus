@@ -1,10 +1,9 @@
 {
   "name": "digitalcampus",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www",
-    "auth:environ": "node build/auth/environ/index.js"
+    "start": "node ./bin/www"
   },
   "author": "eCoolGe",
   "license": "ISC",

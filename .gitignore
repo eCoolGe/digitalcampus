@@ -6,4 +6,5 @@ package-lock.json
 .idea/
 
 # secrets
-secrets/*
+secrets/key.json
+
