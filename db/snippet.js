@@ -12,6 +12,13 @@ const VIOLATION_CHARTERS_TABLE = 'violation_charters';
 const USERS_TABLE = 'users';
 const SKUD_TABLE = 'skud';
 
+const Personality = require('./models/personality');
+const Locations = require('./models/locations');
+const Activities = require('./models/activities');
+const Violation_Charters = require('./models/violation_charters');
+const Users = require('./models/users');
+const Skud = require('./models/skud');
+
 async function createTables(session, logger) {
     logger.info('Dropping old tables...');
     await session.dropTable(PERSONALITY_TABLE);
@@ -22,7 +29,7 @@ async function createTables(session, logger) {
     await session.dropTable(SKUD_TABLE);
     logger.info('Creating tables...');
     await session.createTable(PERSONALITY_TABLE, new ydbSDK.TableDescription()
-        .withColumn(new ydbSDK.Column('personality_data', ydbSDK.Types.optional(ydbSDK.Types.INT64)))
+        .withColumn(new ydbSDK.Column('personality_data', ydbSDK.Types.optional(ydbSDK.Types.UTF8)))
         .withColumn(new ydbSDK.Column('id_location', ydbSDK.Types.optional(ydbSDK.Types.UINT64)))
         .withColumn(new ydbSDK.Column('id_activity', ydbSDK.Types.optional(ydbSDK.Types.UINT64)))
         .withColumn(new ydbSDK.Column('id_violation_charter', ydbSDK.Types.optional(ydbSDK.Types.UINT64)))
@@ -53,7 +60,7 @@ async function createTables(session, logger) {
         .withColumn(new ydbSDK.Column('id_gradebook', ydbSDK.Types.optional(ydbSDK.Types.UINT64)))
         .withColumn(new ydbSDK.Column('id_employee', ydbSDK.Types.optional(ydbSDK.Types.UINT64)))
         .withColumn(new ydbSDK.Column('passport', ydbSDK.Types.optional(ydbSDK.Types.UTF8)))
-        .withColumn(new ydbSDK.Column('personality_data', ydbSDK.Types.optional(ydbSDK.Types.INT64)))
+        .withColumn(new ydbSDK.Column('personality_data', ydbSDK.Types.optional(ydbSDK.Types.UTF8)))
         .withColumn(new ydbSDK.Column('fio', ydbSDK.Types.optional(ydbSDK.Types.UTF8)))
         .withColumn(new ydbSDK.Column('birth_date', ydbSDK.Types.optional(ydbSDK.Types.DATE)))
         .withColumn(new ydbSDK.Column('gender', ydbSDK.Types.optional(ydbSDK.Types.UTF8)))
@@ -72,7 +79,7 @@ async function fillTablesWithData(session, logger) {
 ${utils.SYNTAX_V1}
 
 DECLARE $personalityData AS List<Struct<
-    personality_data: Int64,
+    personality_data: Utf8,
     id_location: Uint64,
     id_activity: Uint64,
     id_violation_charter: Uint64,
@@ -99,7 +106,7 @@ DECLARE $usersData AS List<Struct<
     id_gradebook: Uint64,
     id_employee: Uint64,
     passport: Utf8,
-    personality_data: Int64,
+    personality_data: Utf8,
     fio: Utf8,
     birth_date: Date,
     gender: Utf8>>;
@@ -181,7 +188,7 @@ FROM AS_TABLE($skudData);
     await ydbSDK.withRetries(fillTable);
 }
 
-async function selectSimple(session, logger) {
+async function select1Simple(session, logger) {
     const query = `
 ${utils.SYNTAX_V1}
 SELECT e.title, s.title
@@ -194,40 +201,78 @@ USING (series_id);`;
     console.log(`selectSimple result: ${JSON.stringify(result, null, 2)}`);
 }
 
-async function readTable(table_name, session, logger, settings) {
+async function editSimple(table_name, edit_mode, table_col, session) {
+    let table_rows;
+    table_name === PERSONALITY_TABLE ? table_rows = `personality_data, id_location, id_activity, id_violation_charter, temperature_personality, datetime_personality` : '';
+    table_name === LOCATIONS_TABLE ? table_rows = `id_location, address_location, coords_location, name_location` : '';
+    table_name === ACTIVITIES_TABLE ? table_rows = `id_activity, name_activity, hazard_activity, notification, fine_activity` : '';
+    table_name === VIOLATION_CHARTERS_TABLE ? table_rows = `id_violation_charter, name_violation_charter, type_violation_charter` : '';
+    table_name === USERS_TABLE ? table_rows = `id_user, id_pass, id_gradebook, id_employee, passport, personality_data, fio, birth_date, gender` : '';
+    table_name === SKUD_TABLE ? table_rows = `id_skud, id_pass, datetime_entry, datetime_exit` : '';
+    const query = `
+${utils.SYNTAX_V1}
+${edit_mode.toUpperCase()} INTO ${table_name} (${table_rows}) VALUES (${table_col});
+`;
+    console.log(`Making an ${edit_mode} in table "${table_name}" values (${table_col})...`);
+    await session.executeQuery(query);
+    console.log('Upsert completed.');
+}
+
+async function selectSimple(table_name, table_col_name, table_col_value, session) {
+    let res;
+    const query = `
+${utils.SYNTAX_V1}
+SELECT * FROM ${table_name} WHERE ${table_col_name} == ${table_col_value};
+`;
+    console.log(`Making a simple select in table "${table_name}" where ${table_col_name}=${table_col_value}...`);
+    const { resultSets } = await session.executeQuery(query);
+
+    table_name === PERSONALITY_TABLE ? res = Personality.createNativeObjects(resultSets[0]) : "";
+    table_name === LOCATIONS_TABLE ? res = Locations.createNativeObjects(resultSets[0]) : "";
+    table_name === ACTIVITIES_TABLE ? res = Activities.createNativeObjects(resultSets[0]) : "";
+    table_name === VIOLATION_CHARTERS_TABLE ? res = Violation_Charters.createNativeObjects(resultSets[0]) : "";
+    table_name === USERS_TABLE ? res = Users.createNativeObjects(resultSets[0]) : "";
+    table_name === SKUD_TABLE ? res = Skud.createNativeObjects(resultSets[0]) : "";
+
+    console.log(`Select simple result: ${JSON.stringify(res, null, 2)}`);
+    return res;
+}
+
+async function deleteSimple(table_name, table_col_name, table_col_value, session) {
+
+    const query = `
+${utils.SYNTAX_V1}
+DELETE FROM ${table_name} WHERE ${table_col_name} == ${table_col_value};
+`;
+    console.log(`Delete in table "${table_name}" where ${table_col_name}=${table_col_value}...`);
+    await session.executeQuery(query);
+    console.log('Delete completed.');
+}
+
+async function readTable(table_name, session, settings) {
+    let res;
     await session.streamReadTable(table_name, (result) => {
         const resultSet = result.resultSet;
         if (resultSet) {
-            const table = data_helpers.Table.createNativeObjects(resultSet);
-            // console.log(table);
-            table.forEach((table) => {
-                if (table_name === 'orders') {
-                    console.log(`#  Order, CustomerId: ${table.customerId}, OrderId: ${table.orderId}, Description: ${table.description}, Order date: ${table.orderDate}`);
-                }
-                if (table_name === 'users') {
-                    console.log(`#  Users, Id: ${table.id}, Login: ${table.login}`);
-                }
-            });
+            table_name === PERSONALITY_TABLE ? res = Personality.createNativeObjects(resultSet) : "";
+            table_name === LOCATIONS_TABLE ? res = Locations.createNativeObjects(resultSet) : "";
+            table_name === ACTIVITIES_TABLE ? res = Activities.createNativeObjects(resultSet) : "";
+            table_name === VIOLATION_CHARTERS_TABLE ? res = Violation_Charters.createNativeObjects(resultSet) : "";
+            table_name === USERS_TABLE ? res = Users.createNativeObjects(resultSet) : "";
+            table_name === SKUD_TABLE ? res = Skud.createNativeObjects(resultSet) : "";
         }
     }, settings);
+    console.log(`Data output from the table "${table_name}"`);
+    return res;
 }
 
+let driver;
 async function run(logger, endpoint, database, args) {
-    // logger.info('Driver initializing...');
-    // const authService = ydbSDK.getCredentialsFromEnv();
-    // const driver = new ydbSDK.Driver({ endpoint, database, authService });
-    // const timeout = 10000;
-    // if (!await driver.ready(timeout)) {
-    //     logger.fatal(`Driver has not become ready in ${timeout}ms!`);
-    //     process.exit(1);
-    // }
-    // logger.info('Done');
-
     logger.info('Driver initializing...');
     const saKeyFile = args.serviceAccountKeyFile;
     const saCredentials = ydbSDK.getSACredentialsFromJson(saKeyFile);
     const authService = new ydbSDK.IamAuthService(saCredentials);
-    const driver = new ydbSDK.Driver({ endpoint, database, authService });
+    driver = new ydbSDK.Driver({ endpoint, database, authService });
     const timeout = 10000;
     if (!await driver.ready(timeout)) {
         logger.fatal(`Driver has not become ready in ${timeout}ms!`);
@@ -243,15 +288,58 @@ async function run(logger, endpoint, database, args) {
     });
 
     // await driver.tableClient.withSession(async (session) => {
-    //     logger.info('Read whole table, unsorted:');
+    //     await deleteSimple(LOCATIONS_TABLE, 0, session);
+    // });
+
+    // await driver.tableClient.withSession(async (session) => {
+    //     console.log(await selectSimple(LOCATIONS_TABLE, `id_location`, 1, session));
+    // });
+
+    //editSimpleByName(SKUD_TABLE, `upsert`,`6, "346428, Ростовская обл., г. Новочеркасск, ул. Энгельса, 85А", "47.416812, 40.074263", "Общежитие 10"`);
+
+    // deleteSimpleByName(LOCATIONS_TABLE, 'id_location',4);
+
+    // await driver.tableClient.withSession(async (session) => {
+    //     //logger.info('Read whole table, unsorted:');
     //
-    //     await readTable('orders', session, logger);
-    //     await readTable('users', session, logger);
+    //     // s.forEach((users) => {
+    //     //     console.log(`#  Users, Id: ${users.idUser}, Login: ${users.fio}`);
+    //     // });
+    //
+    //     // await readTable(session, logger);
+    //
+    //     // await readTable('users', session, logger);
     //     // await selectSimple(session, logger);
     // });
 
     await driver.destroy();
 }
+
+function readTableByName(table_name) {
+    return  driver.tableClient.withSession( (session) => readTable(table_name, session));
+}
+exports.readTableByName = readTableByName;
+
+async function editSimpleByName(table_name, edit_mode, table_col) {
+    await driver.tableClient.withSession( async (session) => {
+            await editSimple(table_name, edit_mode, table_col, session);
+    });
+}
+exports.editSimpleByName = editSimpleByName;
+
+function selectSimpleByName(table_name, table_col_name, table_col_value) {
+    return driver.tableClient.withSession( (session) => selectSimple(table_name, table_col_name, table_col_value, session));
+}
+exports.selectSimpleByName = selectSimpleByName;
+
+async function deleteSimpleByName(table_name, table_col_name, table_col_value) {
+    await driver.tableClient.withSession( async (session) => {
+        console.log(`Delete in table ${table_name}...`);
+        await deleteSimple(table_name, table_col_name, table_col_value, session);
+        console.log('Delete completed.');
+    });
+}
+exports.deleteSimpleByName = deleteSimpleByName;
 
 exports.run = run;
 exports.options = [{

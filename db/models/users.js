@@ -41,7 +41,7 @@ __decorate([
     ydbSDK.declareType(ydbSDK.Types.UTF8)
 ], Users.prototype, "passport", void 0);
 __decorate([
-    ydbSDK.declareType(ydbSDK.Types.INT64)
+    ydbSDK.declareType(ydbSDK.Types.UTF8)
 ], Users.prototype, "personalityData", void 0);
 __decorate([
     ydbSDK.declareType(ydbSDK.Types.UTF8)

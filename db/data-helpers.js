@@ -26,11 +26,11 @@ function rttGen(min, max) {
 
 function getPersonalityData() {
     return Personality.asTypedCollection([
-        Personality.create(51116387928887, 1, 1, 1,36.6, new Date("2006-02-03")),
-        Personality.create(32838118972656, 3, 3, 1,35.6, new Date("2006-02-03")),
-        Personality.create(35210933387152, 2, 1, 1,36.4, new Date("2006-02-03")),
-        Personality.create(44942411679400, 1, 2, 3,36.5, new Date("2006-02-03")),
-        Personality.create(40057957250489, 3, 3, 1,35.9, new Date("2006-02-03")),
+        Personality.create("51116387928887", 1, 1, 1,36.6, rttGen(-15,5)),
+        Personality.create("32838118972656", 3, 3, 1,35.6, rttGen(-15,5)),
+        Personality.create("35210933387152", 2, 1, 1,36.4, rttGen(-15,5)),
+        Personality.create("44942411679400", 1, 2, 3,36.5, rttGen(-15,5)),
+        Personality.create("40057957250489", 3, 3, 1,35.9, rttGen(-15,5)),
     ]);
 }
 exports.getPersonalityData = getPersonalityData;
@@ -64,11 +64,11 @@ exports.getViolationChartersData = getViolationChartersData;
 
 function getUsersData() {
     return Users.asTypedCollection([
-        Users.create(1,150833946,1832123,13021,"3225764451",32838118972656,"Абрамов Николай Федорович",new Date("1996-22-10"),"М"),
-        Users.create(2,100833333,0,14231,"6021114451",51116387928887,"Анисимова Анастасия Алексадровна",new Date("1970-11-03"),"Ж"),
-        Users.create(3,150833946,1842223,0,"9021212333",44942411679400,"Кикиморов Георгий Михайлович",new Date("1996-22-11"),"М"),
-        Users.create(4,112833232,1123423,0,"3212112452",35210933387152,"Полякова Мария Валентиновна",new Date("1998-12-23"),"Ж"),
-        Users.create(5,151233453,2123623,0,"5652112452",40057957250489,"Георова Тамара Петровна",new Date("2001-22-07"),"Ж"),
+        Users.create(1,150833946,1832123,13021,"3225 764451","32838118972656","Абрамов Николай Федорович",new Date("1996-10-22"),"М"),
+        Users.create(2,100833333,0,14231,"6021 114451","51116387928887","Анисимова Анастасия Алексадровна",new Date("1970-03-11"),"Ж"),
+        Users.create(3,150833945,1842223,0,"9021 212333","44942411679400","Кикиморов Георгий Михайлович",new Date("1996-11-22"),"М"),
+        Users.create(4,112833232,1123423,0,"3212 112452","35210933387152","Полякова Мария Валентиновна",new Date("1998-12-23"),"Ж"),
+        Users.create(5,151233453,2123623,0,"5652 112452","40057957250489","Георова Тамара Петровна",new Date("2001-07-22"),"Ж"),
     ]);
 }
 exports.getUsersData = getUsersData;

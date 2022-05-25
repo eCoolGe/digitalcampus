@@ -14,7 +14,7 @@ class Personality extends ydbSDK.TypedData {
         this.personalityData = data.personalityData;
         this.idLocation = data.idLocation;
         this.idActivity = data.idActivity;
-        this.idViolationHarter = data.idViolationHarter;
+        this.idViolationCharter = data.idViolationCharter;
         this.temperaturePersonality = data.temperaturePersonality;
         this.datetimePersonality = data.datetimePersonality;
     }
@@ -23,7 +23,7 @@ class Personality extends ydbSDK.TypedData {
     }
 };
 __decorate([
-    ydbSDK.declareType(ydbSDK.Types.INT64)
+    ydbSDK.declareType(ydbSDK.Types.UTF8)
 ], Personality.prototype, "personalityData", void 0);
 __decorate([
     ydbSDK.declareType(ydbSDK.Types.UINT64)

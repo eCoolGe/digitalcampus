@@ -9,6 +9,12 @@ const usersRouter = require('./routes/users');
 
 const app = express();
 
+// Подключение к базе данных
+Object.defineProperty(exports, '__esModule', { value: true });
+const utils = require('./db/utils');
+const snippet = require('./db/snippet');
+utils.main(snippet.run, snippet.options);
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
