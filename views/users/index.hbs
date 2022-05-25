@@ -3,16 +3,21 @@
 <head>
     <title>{{title}}</title>
     <meta charset="utf-8" />
-    <link rel='stylesheet' href='/public/stylesheets/style.css' />
+<!--    <link rel='stylesheet' href='/public/stylesheets/style.css' />-->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
 </head>
 <body>
-<div class="container">
-    <br>
-    <h1>{{title}}</h1>
-    <br>
-    <p><a href="/users/create">Добавить пользователя</a></p>
+<div class='container mt-3'>
+    <div class=" col-12 mb-3">В
+        <div class="d-flex align-items-center ">
+            <div class="mr-3 safari-logo-width ">
+                <img src="https://www.npi-tu.ru/simai.data/image/logo/yurgpu04.jpg" class="" style="max-height:4rem">
+            </div>
+            <h1 class='pl-2'>{{title}}</h1>
+        </div>
+    </div>
+    <p><a href="/">На главную</a> | <a href="/users/create">Добавить пользователя</a></p>
     <table class="table">
         <thead>
         <tr>
@@ -41,10 +46,10 @@
                 <td>{{formatTime this.birthDate "YYYY-MM-DD"}}</td>
                 <td>{{this.gender}}</td>
                 <td>
-                    <a href="/users/edit/{{this.idUser}}">Edit</a>
+                    <a class="btn btn-success btn-sm mb-1" href="/users/edit/{{this.idUser}}" role="button">✎</a>
                     <br>
                     <form action="/users/delete/{{this.idUser}}" method="POST" style="display:inline;">
-                        <input type="submit" value="Delete" />
+                        <input class="btn btn-danger btn-sm" type="submit" value="❌" />
                     </form>
                 </td>
             </tr>

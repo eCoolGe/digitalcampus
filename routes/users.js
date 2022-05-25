@@ -4,7 +4,6 @@ express().set('view engine', 'hbs');
 let Handlebars = require('hbs');
 let moment = require('moment');
 
-
 const readTableByName = require('../db/snippet').readTableByName;
 const editSimpleByName = require('../db/snippet').editSimpleByName;
 const selectSimpleByName = require('../db/snippet').selectSimpleByName;
@@ -60,14 +59,31 @@ router.post("/create", urlencodedParser, async function (req, res) {
   const birth_date = req.body.birthDate;
   const gender = req.body.gender;
 
-  //console.log(`${id_user}, ${id_pass}, ${id_gradebook}, ${id_employee}, "${passport}", "${personality_data}", "${fio}", Date(${birth_date}), "${gender}"`);
+  console.log(`${id_user}, ${id_pass}, ${id_gradebook}, ${id_employee}, "${passport}", "${personality_data}", "${fio}", Date(${birth_date}), "${gender}"`);
 
   try {
-      await editSimpleByName(USERS_TABLE, `insert`,`${id_user}, ${id_pass}, ${id_gradebook}, ${id_employee}, "${passport}", "${personality_data}", "${fio}", Date("${birth_date}"), "${gender}"`);
-      res.redirect("/users");
+      let table = await selectSimpleByName(USERS_TABLE, 'id_user', id_user);
+      if (table.length === 0){
+          await editSimpleByName(USERS_TABLE, `insert`, `${id_user}, ${id_pass}, ${id_gradebook}, ${id_employee}, "${passport}", "${personality_data}", "${fio}", Date("${birth_date}"), "${gender}"`);
+          res.redirect("/users");
+      } else if (
+          parseInt(table[0].idUser) !== parseInt(id_user) &&
+          parseInt(table[0].idPass) !== parseInt(id_pass) &&
+          parseInt(table[0].idGradebook) !== parseInt(id_gradebook) &&
+          parseInt(table[0].idEmployee) !== parseInt(id_employee) &&
+          table[0].passport.toString() !== passport.toString() &&
+          table[0].personalityData.toString() !== personality_data.toString()
+      ) {
+          await editSimpleByName(USERS_TABLE, `insert`, `${id_user}, ${id_pass}, ${id_gradebook}, ${id_employee}, "${passport}", "${personality_data}", "${fio}", Date("${birth_date}"), "${gender}"`);
+          res.redirect("/users");
+      } else {
+          console.log("It is not possible to add data to the table: the primary key has already been used (Error 409)");
+          res.status(409).send("Невозможно добавить данные в таблицу: первичный ключ уже был использован");
+      }
   }
   catch (err) {
       console.log("It is not possible to add data to the table: the primary key has already been used (Error 409)");
+      console.log(err);
       res.status(409).send("Невозможно добавить данные в таблицу: первичный ключ уже был использован");
   }
 });

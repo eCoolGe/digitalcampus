@@ -188,18 +188,18 @@ FROM AS_TABLE($skudData);
     await ydbSDK.withRetries(fillTable);
 }
 
-async function select1Simple(session, logger) {
-    const query = `
-${utils.SYNTAX_V1}
-SELECT e.title, s.title
-FROM episodes AS e
-FULL JOIN seasons AS s 
-USING (series_id);`;
-    logger.info('Making a simple select...');
-    const { resultSets } = await session.executeQuery(query);
-    const result = data_helpers.Table.createNativeObjects(resultSets[0]);
-    console.log(`selectSimple result: ${JSON.stringify(result, null, 2)}`);
-}
+// async function select1Simple(session, logger) {
+//     const query = `
+// ${utils.SYNTAX_V1}
+// SELECT e.title, s.title
+// FROM episodes AS e
+// FULL JOIN seasons AS s
+// USING (series_id);`;
+//     logger.info('Making a simple select...');
+//     const { resultSets } = await session.executeQuery(query);
+//     const result = data_helpers.Table.createNativeObjects(resultSets[0]);
+//     console.log(`selectSimple result: ${JSON.stringify(result, null, 2)}`);
+// }
 
 async function editSimple(table_name, edit_mode, table_col, session) {
     let table_rows;
@@ -314,6 +314,7 @@ async function run(logger, endpoint, database, args) {
 
     await driver.destroy();
 }
+exports.run = run;
 
 function readTableByName(table_name) {
     return  driver.tableClient.withSession( (session) => readTable(table_name, session));
@@ -341,7 +342,6 @@ async function deleteSimpleByName(table_name, table_col_name, table_col_value) {
 }
 exports.deleteSimpleByName = deleteSimpleByName;
 
-exports.run = run;
 exports.options = [{
     key: 'serviceAccountKeyFile',
     name: 'service-account-key-file',
